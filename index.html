@@ -4,157 +4,318 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pengingat Tugas</title>
-
-  <!-- Manifest PWA -->
   <link rel="manifest" href="manifest.json">
-<script src="service-worker.js"></script>
-  <meta name="theme-color" content="#2196f3">
-
-  <!-- Gaya sederhana -->
+  <link rel="icon" href="123.png" type="image/png">
   <style>
+    :root {
+      --bg: #f5f7fa;
+      --text: #333;
+      --card: #fff;
+      --accent: #4a90e2;
+      --shadow: rgba(0,0,0,0.1);
+    }
+    body.dark {
+      --bg: #121212;
+      --text: #e0e0e0;
+      --card: #1e1e1e;
+      --accent: #64b5f6;
+      --shadow: rgba(255,255,255,0.05);
+    }
+    * {
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9 url('321.jpg') center/cover no-repeat fixed;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 10px;
-      padding: 20px;
-      max-width: 400px;
-      margin: 80px auto;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      text-align: center;
-      color: #2196f3;
-    }
-
-    .input-container {
       display: flex;
-      margin: 20px 0;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
     }
-
-    input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      outline: none;
-    }
-
-    button {
-      margin-left: 10px;
-      padding: 10px 15px;
-      background-color: #2196f3;
+    header {
+      background: var(--accent);
       color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+    header button {
+      background: transparent;
       border: none;
-      border-radius: 8px;
+      color: white;
+      font-size: 1.4em;
       cursor: pointer;
     }
 
-    button:hover {
-      background-color: #1976d2;
+    .container {
+      flex: 1;
+      padding: 20px;
+      max-width: 700px;
+      margin: 0 auto;
+      width: 100%;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .toolbar button {
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: var(--card);
+      cursor: pointer;
+    }
+    .toolbar button:hover {
+      background: var(--accent);
+      color: white;
     }
 
-    li {
-      background: #fff;
-      margin: 10px 0;
+    .editor {
+      background: var(--card);
+      border: 1px solid #ccc;
+      border-radius: 10px;
       padding: 10px;
+      min-height: 80px;
+      box-shadow: 0 2px 5px var(--shadow);
+      margin-bottom: 10px;
+    }
+    .editor:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    button.add {
+      background: var(--accent);
+      color: white;
+      padding: 10px 15px;
       border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      flex: 1;
+    }
+    button.add:hover {
+      opacity: 0.9;
+    }
+    .important-check {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .filter {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0 10px;
+    }
+
+    input#search {
+      width: 60%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    select#filterImportant {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .task {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 2px 5px var(--shadow);
+      margin-bottom: 10px;
+      transition: transform 0.2s;
+    }
+    .task:hover {
+      transform: scale(1.01);
+    }
+
+    .task-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+    .task.important {
+      border-left: 5px solid #ff5c5c;
+    }
 
-    .delete {
-      background: #e74c3c;
+    .task-content {
+      margin-top: 5px;
+    }
+
+    .delete-btn {
+      background: none;
       border: none;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 6px;
+      color: #ff5c5c;
+      font-weight: bold;
       cursor: pointer;
     }
+
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📝 Pengingat Tugas</h1>
+  <header>
+    <div>📝 Pengingat Tugas</div>
+    <button id="toggleTheme">🌙</button>
+  </header>
 
-    <div class="input-container">
-      <input type="text" id="taskInput" placeholder="Tulis pengingat atau tugas...">
-      <button onclick="addTask()">Tambah</button>
+  <div class="container">
+    <div class="toolbar">
+      <button onclick="format('bold')"><b>B</b></button>
+      <button onclick="format('italic')"><i>I</i></button>
+      <button onclick="format('underline')"><u>U</u></button>
+      <button onclick="format('insertUnorderedList')">• List</button>
+      <button onclick="format('insertOrderedList')">1. List</button>
     </div>
 
-    <ul id="taskList"></ul>
+    <div id="editor" class="editor" contenteditable="true" placeholder="Tulis tugas di sini..."></div>
+
+    <div class="actions">
+      <label class="important-check">
+        <input type="checkbox" id="isImportant"> Penting
+      </label>
+      <button class="add" id="addTask">Tambah</button>
+    </div>
+
+    <div class="filter">
+      <input type="text" id="search" placeholder="Cari tugas...">
+      <select id="filterImportant">
+        <option value="all">Semua</option>
+        <option value="important">Penting</option>
+        <option value="not">Tidak Penting</option>
+      </select>
+    </div>
+
+    <div id="taskList"></div>
   </div>
 
   <script>
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const taskList = document.getElementById("taskList");
-    const taskInput = document.getElementById("taskInput");
+    const editor = document.getElementById('editor');
+    const addBtn = document.getElementById('addTask');
+    const list = document.getElementById('taskList');
+    const search = document.getElementById('search');
+    const filterSelect = document.getElementById('filterImportant');
 
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let darkMode = localStorage.getItem('darkMode') === 'true';
+
+    // === THEME ===
+    const toggleTheme = document.getElementById('toggleTheme');
+    document.body.classList.toggle('dark', darkMode);
+    toggleTheme.textContent = darkMode ? '☀️' : '🌙';
+    toggleTheme.addEventListener('click', () => {
+      darkMode = !darkMode;
+      localStorage.setItem('darkMode', darkMode);
+      document.body.classList.toggle('dark', darkMode);
+      toggleTheme.textContent = darkMode ? '☀️' : '🌙';
+    });
+
+    // === FORMAT TEXT ===
+    function format(cmd) {
+      document.execCommand(cmd, false, null);
+    }
+
+    // === RENDER ===
     function renderTasks() {
-      taskList.innerHTML = "";
-      tasks.forEach((task, index) => {
-        const li = document.createElement("li");
-        li.textContent = task;
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Hapus";
-        delBtn.className = "delete";
-        delBtn.onclick = () => deleteTask(index);
-        li.appendChild(delBtn);
-        taskList.appendChild(li);
-      });
+      list.innerHTML = '';
+      const query = search.value.toLowerCase();
+      const filter = filterSelect.value;
+
+      tasks
+        .filter(t =>
+          t.text.toLowerCase().includes(query) &&
+          (filter === 'all' || (filter === 'important' && t.important) || (filter === 'not' && !t.important))
+        )
+        .forEach((t, i) => {
+          const div = document.createElement('div');
+          div.className = `task ${t.important ? 'important' : ''}`;
+          div.innerHTML = `
+            <div class="task-header">
+              <span>${t.important ? '⭐' : ''} Tugas ${i+1}</span>
+              <button class="delete-btn" onclick="deleteTask(${i})">Hapus</button>
+            </div>
+            <div class="task-content">${t.text}</div>
+          `;
+          list.appendChild(div);
+        });
+
+      localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 
-    function addTask() {
-      const task = taskInput.value.trim();
-      if (task) {
-        tasks.push(task);
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-        taskInput.value = "";
-        renderTasks();
-      }
-    }
+    addBtn.addEventListener('click', () => {
+      const text = editor.innerHTML.trim();
+      const important = document.getElementById('isImportant').checked;
+      if (!text) return alert('Isi dulu tugasnya!');
 
-    function deleteTask(index) {
-      tasks.splice(index, 1);
-      localStorage.setItem("tasks", JSON.stringify(tasks));
+      tasks.push({ text, important });
+      editor.innerHTML = '';
+      document.getElementById('isImportant').checked = false;
+      renderTasks();
+    });
+
+    function deleteTask(i) {
+      tasks.splice(i, 1);
       renderTasks();
     }
 
+    search.addEventListener('input', renderTasks);
+    filterSelect.addEventListener('change', renderTasks);
+
     renderTasks();
-
-    // Daftarkan Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log("✅ Service Worker terdaftar"))
-        .catch(err => console.log("❌ Gagal daftar SW:", err));
+    // === IZIN NOTIFIKASI ===
+if ('Notification' in window && 'serviceWorker' in navigator) {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      console.log("✅ Izin notifikasi diberikan.");
+      scheduleNotification();
+    } else {
+      console.log("❌ Izin notifikasi ditolak.");
     }
+  });
+}
+
+// === JADWALKAN PENGINGAT ===
+function scheduleNotification() {
+  if ('serviceWorker' in navigator && 'periodicSync' in Registration.prototype) {
+    navigator.serviceWorker.ready.then(reg => {
+      reg.periodicSync.register('pengingat-tugas', {
+        minInterval: 60 * 60 * 1000 // setiap 1 jam
+      });
+    });
+  } else {
+    // fallback manual (setiap 1 jam di tab aktif)
+    setInterval(() => {
+      new Notification("Pengingat Tugas 📋", {
+        body: "Jangan lupa buka aplikasi pengingat tugasmu!",
+        icon: "123.png"
+      });
+    }, 3600000);
+  }
+}
+
   </script>
-  <script>
-  let deferredPrompt;
-
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    console.log("✨ PWA siap diinstal!");
-  });
-
-  window.addEventListener("appinstalled", () => {
-    console.log("🎉 Aplikasi berhasil diinstal!");
-  });
-</script>
 </body>
 </html>

@@ -1,34 +1,35 @@
-const CACHE_NAME = "pengingat-tugas-v2";
-const FILES_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./123.png",
-  "./321.jpg"
-];
+const CACHE_NAME = "pengingat-v4";
+const FILES_TO_CACHE = ["./", "./index.html", "./manifest.json", "./123.png"];
 
-// Saat pertama kali diinstall
-self.addEventListener("install", event => {
+self.addEventListener("install", (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener("fetch", (e) => {
+  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
+});
+
+// === NOTIFIKASI PERIODIK ===
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "pengingat-tugas") {
+    showNotification();
+  }
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(FILES_TO_CACHE))
-  );
-  console.log("✅ Service Worker: Terinstal");
-});
-
-// Saat offline, ambil dari cache
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    clients.openWindow("./index.html")
   );
 });
 
-// Update cache jika ada versi baru
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys => 
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-});
+function showNotification() {
+  self.registration.showNotification("Pengingat Tugas 🕐", {
+    body: "Ojo Klalen Buka TugasMu Saiki!",
+    icon: "123.png",
+    badge: "123.png",
+  });
+}
