@@ -142,5 +142,18 @@
         .catch(err => console.log("❌ Gagal daftar SW:", err));
     }
   </script>
+  <script>
+  let deferredPrompt;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    console.log("✨ PWA siap diinstal!");
+  });
+
+  window.addEventListener("appinstalled", () => {
+    console.log("🎉 Aplikasi berhasil diinstal!");
+  });
+</script>
 </body>
 </html>
