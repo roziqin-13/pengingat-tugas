@@ -4,17 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pengingat Tugas</title>
+
+  <!-- Manifest PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2196f3">
-  <link rel="stylesheet" href="style.css">
 
+  <!-- Gaya sederhana -->
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f6f9;
+      background: #f4f6f9 url('321.jpg') center/cover no-repeat fixed;
       margin: 0;
       padding: 20px;
       color: #333;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 400px;
+      margin: 80px auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
     h1 {
@@ -76,18 +87,19 @@
   </style>
 </head>
 <body>
-  <h1>📝 Pengingat Tugas</h1>
+  <div class="container">
+    <h1>📝 Pengingat Tugas</h1>
 
-  <div class="input-container">
-    <input type="text" id="taskInput" placeholder="Tulis pengingat atau tugas...">
-    <button onclick="addTask()">Tambah</button>
+    <div class="input-container">
+      <input type="text" id="taskInput" placeholder="Tulis pengingat atau tugas...">
+      <button onclick="addTask()">Tambah</button>
+    </div>
+
+    <ul id="taskList"></ul>
   </div>
-
-  <ul id="taskList"></ul>
 
   <script>
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-
     const taskList = document.getElementById("taskList");
     const taskInput = document.getElementById("taskInput");
 
@@ -121,12 +133,13 @@
       renderTasks();
     }
 
-    // load data saat halaman dibuka
     renderTasks();
 
-    // daftarkan service worker
+    // Daftarkan Service Worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log("✅ Service Worker terdaftar"))
+        .catch(err => console.log("❌ Gagal daftar SW:", err));
     }
   </script>
 </body>
